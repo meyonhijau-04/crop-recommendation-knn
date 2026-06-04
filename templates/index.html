@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="id" data-tema="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistem Rekomendasi Tanaman Berbasis KNN">
+    <title>Sistem Rekomendasi Tanaman - KNN</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- Google Fonts Inter -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- CSS Kustom -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<!-- ============================================================
+     LOADING OVERLAY
+     Muncul saat proses prediksi sedang berjalan
+     ============================================================ -->
+<div id="overlay-loading" class="overlay-loading">
+    <div style="text-align: center;">
+        <div class="spinner-kustom"></div>
+        <div id="loading-teks" class="loading-teks">Sedang memproses...</div>
+    </div>
+</div>
+
+
+<!-- ============================================================
+     NAVBAR
+     ============================================================ -->
+<nav class="navbar-kustom">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between w-100">
+
+            <!-- Brand -->
+            <a href="{{ url_for('index') }}" class="navbar-brand-teks text-decoration-none">
+                Rekomendasi <span>Tanaman</span>
+            </a>
+
+            <!-- Nav Links dan Tombol Tema -->
+            <div class="d-flex align-items-center gap-2">
+                <nav class="d-none d-md-flex align-items-center gap-1">
+                    <a href="{{ url_for('index') }}"
+                       class="nav-link active">Beranda</a>
+                    <a href="{{ url_for('form_teknis') }}"
+                       class="nav-link">Mode Ahli</a>
+                    <a href="{{ url_for('form_petani') }}"
+                       class="nav-link">Mode Petani</a>
+                    <a href="{{ url_for('about') }}"
+                       class="nav-link">Tentang</a>
+                </nav>
+
+                <!-- Tombol Toggle Tema -->
+                <button id="tombol-tema" class="btn-tema">
+                    Gelap
+                </button>
+            </div>
+
+        </div>
+    </div>
+</nav>
+
+
+<!-- ============================================================
+     HERO SECTION
+     ============================================================ -->
+<section class="hero-section">
+    <div class="container">
+        <h1 class="hero-judul">
+            Sistem Rekomendasi Tanaman
+        </h1>
+        <p class="hero-subjudul">
+            Masukkan kondisi lahan Anda dan sistem akan merekomendasikan
+            tanaman yang paling cocok menggunakan algoritma
+            K-Nearest Neighbors (KNN).
+        </p>
+
+        <!-- Tombol Mulai -->
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{{ url_for('form_petani') }}" class="btn-primer btn-lg-kustom">
+                Saya Petani
+            </a>
+            <a href="{{ url_for('form_teknis') }}" class="btn-sekunder btn-lg-kustom"
+               style="border-color: rgba(255,255,255,0.5); color: #ffffff;">
+                Saya Peneliti
+            </a>
+        </div>
+    </div>
+</section>
+
+
+<!-- ============================================================
+     SECTION PILIHAN MODE
+     ============================================================ -->
+<section class="py-5">
+    <div class="container">
+
+        <div class="text-center mb-4">
+            <h2 class="section-judul">Pilih Cara Input Data</h2>
+            <p class="section-subjudul">
+                Tersedia tiga cara untuk mendapatkan rekomendasi tanaman
+            </p>
+            <div class="garis-aksen mx-auto"></div>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- Mode Petani -->
+            <div class="col-12 col-md-4">
+                <a href="{{ url_for('form_petani') }}" class="card-mode">
+                    <div class="card-mode-ikon hijau">
+                        <svg width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8.416.223a.5.5 0 0 0-.832 0l-3 4.5A.5.5 0 0 0 5 5.5h.098L3.076 8.735A.5.5 0 0 0 3.5 9.5h.191l-1.638 3.276a.5.5 0 0 0 .447.724H6v-3.5a2 2 0 1 1 4 0V13.5h3.5a.5.5 0 0 0 .447-.724L12.31 9.5h.191a.5.5 0 0 0 .424-.765L10.902 5.5H11a.5.5 0 0 0 .416-.777l-3-4.5z"/>
+                        </svg>
+                    </div>
+                    <div class="card-mode-judul">Mode Petani</div>
+                    <div class="card-mode-deskripsi">
+                        Jawab beberapa pertanyaan sederhana tentang kondisi
+                        lahan Anda. Tidak perlu mengetahui nilai teknis
+                        seperti N, P, K, atau pH.
+                    </div>
+                    <div class="mt-3">
+                        <span class="btn-primer" style="font-size: 0.85rem; padding: 0.45rem 1rem;">
+                            Mulai
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Mode Ahli -->
+            <div class="col-12 col-md-4">
+                <a href="{{ url_for('form_teknis') }}" class="card-mode">
+                    <div class="card-mode-ikon biru">
+                        <svg width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+                        </svg>
+                    </div>
+                    <div class="card-mode-judul">Mode Ahli</div>
+                    <div class="card-mode-deskripsi">
+                        Masukkan nilai teknis secara langsung seperti
+                        kadar Nitrogen, Fosfor, Kalium, pH tanah,
+                        suhu, kelembapan, dan curah hujan.
+                    </div>
+                    <div class="mt-3">
+                        <span class="btn-primer" style="font-size: 0.85rem; padding: 0.45rem 1rem;">
+                            Mulai
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Upload CSV -->
+            <div class="col-12 col-md-4">
+                <a href="{{ url_for('form_teknis') }}?tab=bulk" class="card-mode">
+                    <div class="card-mode-ikon ungu">
+                        <svg width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                            <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                        </svg>
+                    </div>
+                    <div class="card-mode-judul">Upload CSV</div>
+                    <div class="card-mode-deskripsi">
+                        Upload file CSV berisi banyak data lahan sekaligus.
+                        Sistem akan memproses semua data dan menampilkan
+                        hasil rekomendasi dalam tabel.
+                    </div>
+                    <div class="mt-3">
+                        <span class="btn-primer" style="font-size: 0.85rem; padding: 0.45rem 1rem;">
+                            Mulai
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<!-- ============================================================
+     SECTION CARA KERJA
+     ============================================================ -->
+<section class="py-5" style="background-color: var(--bg-sidebar);">
+    <div class="container">
+
+        <div class="text-center mb-4">
+            <h2 class="section-judul">Cara Kerja Sistem</h2>
+            <p class="section-subjudul">
+                Empat langkah sederhana untuk mendapatkan rekomendasi tanaman
+            </p>
+            <div class="garis-aksen mx-auto"></div>
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card-kustom card-body-kustom text-center h-100">
+                    <div class="stat-angka">01</div>
+                    <div class="fw-700 mb-2" style="font-weight: 700;">
+                        Pilih Mode Input
+                    </div>
+                    <div style="font-size: 0.875rem; color: var(--teks-sekunder);">
+                        Pilih Mode Petani jika tidak mengetahui
+                        nilai teknis, atau Mode Ahli jika memiliki
+                        data laboratorium.
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card-kustom card-body-kustom text-center h-100">
+                    <div class="stat-angka">02</div>
+                    <div class="fw-700 mb-2" style="font-weight: 700;">
+                        Isi Data Lahan
+                    </div>
+                    <div style="font-size: 0.875rem; color: var(--teks-sekunder);">
+                        Jawab pertanyaan sederhana tentang kondisi
+                        lahan Anda atau isi nilai N, P, K, pH,
+                        suhu, kelembapan, dan curah hujan.
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card-kustom card-body-kustom text-center h-100">
+                    <div class="stat-angka">03</div>
+                    <div class="fw-700 mb-2" style="font-weight: 700;">
+                        Proses KNN
+                    </div>
+                    <div style="font-size: 0.875rem; color: var(--teks-sekunder);">
+                        Algoritma KNN membandingkan data lahan Anda
+                        dengan 2200 data referensi untuk menemukan
+                        kecocokan terbaik.
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card-kustom card-body-kustom text-center h-100">
+                    <div class="stat-angka">04</div>
+                    <div class="fw-700 mb-2" style="font-weight: 700;">
+                        Lihat Hasil
+                    </div>
+                    <div style="font-size: 0.875rem; color: var(--teks-sekunder);">
+                        Sistem menampilkan rekomendasi tanaman beserta
+                        tingkat kepercayaan, informasi lengkap,
+                        dan tips penanaman.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<!-- ============================================================
+     SECTION GRAFIK TRAINING
+     Hanya ditampilkan jika grafik sudah tersedia
+     (setelah train_model.py dijalankan)
+     ============================================================ -->
+{% if grafik_training %}
+<section class="py-5">
+    <div class="container">
+
+        <div class="text-center mb-4">
+            <h2 class="section-judul">Performa Model KNN</h2>
+            <p class="section-subjudul">
+                Grafik hasil pelatihan model yang digunakan sistem ini
+            </p>
+            <div class="garis-aksen mx-auto"></div>
+        </div>
+
+        <div class="grid-grafik-training">
+
+            {% if 'confusion_matrix' in grafik_training %}
+            <div class="kontainer-grafik">
+                <div class="grafik-judul">Confusion Matrix</div>
+                <img
+                    src="{{ url_for('static', filename='img/training/confusion_matrix.png') }}"
+                    alt="Confusion Matrix"
+                    class="grafik-img"
+                >
+            </div>
+            {% endif %}
+
+            {% if 'elbow_method' in grafik_training %}
+            <div class="kontainer-grafik">
+                <div class="grafik-judul">Elbow Method — Nilai K Optimal</div>
+                <img
+                    src="{{ url_for('static', filename='img/training/elbow_method.png') }}"
+                    alt="Elbow Method"
+                    class="grafik-img"
+                >
+            </div>
+            {% endif %}
+
+            {% if 'akurasi_per_k' in grafik_training %}
+            <div class="kontainer-grafik">
+                <div class="grafik-judul">Akurasi per Nilai K</div>
+                <img
+                    src="{{ url_for('static', filename='img/training/akurasi_per_k.png') }}"
+                    alt="Akurasi per K"
+                    class="grafik-img"
+                >
+            </div>
+            {% endif %}
+
+            {% if 'heatmap_korelasi' in grafik_training %}
+            <div class="kontainer-grafik">
+                <div class="grafik-judul">Heatmap Korelasi Fitur</div>
+                <img
+                    src="{{ url_for('static', filename='img/training/heatmap_korelasi.png') }}"
+                    alt="Heatmap Korelasi"
+                    class="grafik-img"
+                >
+            </div>
+            {% endif %}
+
+            {% if 'distribusi_fitur' in grafik_training %}
+            <div class="kontainer-grafik">
+                <div class="grafik-judul">Distribusi Fitur Dataset</div>
+                <img
+                    src="{{ url_for('static', filename='img/training/distribusi_fitur.png') }}"
+                    alt="Distribusi Fitur"
+                    class="grafik-img"
+                >
+            </div>
+            {% endif %}
+
+            {% if 'distribusi_label' in grafik_training %}
+            <div class="kontainer-grafik">
+                <div class="grafik-judul">Distribusi Tanaman dalam Dataset</div>
+                <img
+                    src="{{ url_for('static', filename='img/training/distribusi_label.png') }}"
+                    alt="Distribusi Label"
+                    class="grafik-img"
+                >
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="footer-kustom">
+    <div class="container">
+        <div class="row">
+
+            <div class="col-12 col-md-5 mb-3 mb-md-0">
+                <div class="footer-judul">Sistem Rekomendasi Tanaman</div>
+                <div class="footer-teks">
+                    Aplikasi berbasis web menggunakan algoritma
+                    K-Nearest Neighbors (KNN) untuk merekomendasikan
+                    tanaman berdasarkan kondisi tanah dan iklim.
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3 mb-3 mb-md-0">
+                <div class="footer-judul">Navigasi</div>
+                <div class="d-flex flex-column gap-1">
+                    <a href="{{ url_for('index') }}"
+                       class="footer-teks text-decoration-none">Beranda</a>
+                    <a href="{{ url_for('form_petani') }}"
+                       class="footer-teks text-decoration-none">Mode Petani</a>
+                    <a href="{{ url_for('form_teknis') }}"
+                       class="footer-teks text-decoration-none">Mode Ahli</a>
+                    <a href="{{ url_for('about') }}"
+                       class="footer-teks text-decoration-none">Tentang</a>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-4">
+                <div class="footer-judul">Informasi</div>
+                <div class="footer-teks">
+                    Dataset: Crop Recommendation Dataset<br>
+                    Algoritma: K-Nearest Neighbors (KNN)<br>
+                    Framework: Flask + Scikit-Learn<br>
+                    Total Tanaman: 22 Jenis
+                </div>
+            </div>
+
+        </div>
+
+        <hr class="footer-divider">
+
+        <div class="footer-copyright">
+            Selsa Shafana A. - Praktikum Kecerdasan Buatan 
+        </div>
+
+    </div>
+</footer>
+
+
+<!-- Tombol Scroll ke Atas -->
+<button id="tombol-scroll-top" title="Kembali ke atas">
+    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z"/>
+    </svg>
+</button>
+
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Script Kustom -->
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</body>
+</html>

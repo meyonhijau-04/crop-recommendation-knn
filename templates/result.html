@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id" data-tema="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Prediksi - Sistem Rekomendasi Tanaman</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div id="overlay-loading" class="overlay-loading">
+    <div style="text-align: center;">
+        <div class="spinner-kustom"></div>
+        <div id="loading-teks" class="loading-teks">Sedang memproses...</div>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar-kustom">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <a href="{{ url_for('index') }}" class="navbar-brand-teks text-decoration-none">
+                Rekomendasi <span>Tanaman</span>
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                <nav class="d-none d-md-flex align-items-center gap-1">
+                    <a href="{{ url_for('index') }}" class="nav-link">Beranda</a>
+                    <a href="{{ url_for('form_teknis') }}" class="nav-link">Mode Ahli</a>
+                    <a href="{{ url_for('form_petani') }}" class="nav-link">Mode Petani</a>
+                    <a href="{{ url_for('about') }}" class="nav-link">Tentang</a>
+                </nav>
+                <button id="tombol-tema" class="btn-tema">Gelap</button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- HEADER -->
+<div style="background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border-warna); padding: 1.5rem 0;">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb-kustom breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('index') }}">Beranda</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('form_teknis') }}">Mode Ahli</a>
+                </li>
+                <li class="breadcrumb-item active">Hasil Prediksi</li>
+            </ol>
+        </nav>
+        <h1 class="section-judul mt-1">Hasil Prediksi</h1>
+        <p class="section-subjudul mb-0">
+            Rekomendasi tanaman berdasarkan data yang Anda masukkan
+        </p>
+    </div>
+</div>
+
+<main class="py-5">
+    <div class="container">
+        <div class="row g-4">
+
+            <!-- KOLOM KIRI -->
+            <div class="col-12 col-lg-5">
+
+                <!-- Card Hasil Utama -->
+                <div class="card-hasil-utama mb-4">
+                    <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 0.5rem;">
+                        Tanaman yang Direkomendasikan
+                    </div>
+                    <div class="hasil-nama-tanaman">
+                        {{ info.nama_id }}
+                    </div>
+                    <div class="hasil-label-en">
+                        {{ info.nama_en }}
+                    </div>
+                    <div class="hasil-kepercayaan">
+                        Tingkat Kepercayaan: {{ hasil.kepercayaan }}%
+                    </div>
+                    <div class="progress-kepercayaan">
+                        <div
+                            class="progress-bar-kepercayaan"
+                            data-nilai="{{ hasil.kepercayaan }}"
+                            style="width: 0%;"
+                        ></div>
+                    </div>
+                </div>
+
+                <!-- Top 3 Alternatif -->
+                <div class="card-kustom mb-4">
+                    <div class="card-header-kustom">3 Tanaman Teratas</div>
+                    <div class="card-body-kustom">
+                        <div class="d-flex flex-column gap-3">
+                            {% for alt in hasil.top3 %}
+                            <div class="card-alternatif">
+                                <div class="alternatif-nomor">
+                                    {{ loop.index }}
+                                </div>
+                                <div style="flex: 1;">
+                                    <div class="alternatif-nama">
+                                        {{ alt.nama_id }}
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <div class="alternatif-bar">
+                                            <div
+                                                class="alternatif-bar-fill"
+                                                data-nilai="{{ alt.probabilitas }}"
+                                                style="width: 0%;"
+                                            ></div>
+                                        </div>
+                                        <div class="alternatif-persen">
+                                            {{ alt.probabilitas }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Input yang Dimasukkan -->
+                <div class="card-kustom">
+                    <div class="card-header-kustom">Data yang Dimasukkan</div>
+                    <div class="card-body-kustom" style="padding: 0;">
+                        <table class="tabel-input">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Nilai</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fitur, nilai in nilai_input.items() %}
+                                <tr>
+                                    <td>{{ fitur_label[fitur] }}</td>
+                                    <td>
+                                        <strong>{{ nilai }}</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- KOLOM KANAN -->
+            <div class="col-12 col-lg-7">
+
+                <!-- Informasi Tanaman -->
+                <div class="card-kustom mb-4">
+                    <div class="card-header-kustom">
+                        Informasi Tanaman — {{ info.nama_id }}
+                    </div>
+                    <div class="card-body-kustom">
+
+                        <p style="font-size: 0.9rem; color: var(--teks-sekunder); line-height: 1.7; margin-bottom: 1.25rem;">
+                            {{ info.deskripsi }}
+                        </p>
+
+                        <div class="info-item">
+                            <div class="info-item-label">Waktu Tanam</div>
+                            <div class="info-item-nilai">{{ info.waktu_tanam }}</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-item-label">Waktu Panen</div>
+                            <div class="info-item-nilai">{{ info.waktu_panen }}</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-item-label">Suhu Ideal</div>
+                            <div class="info-item-nilai">{{ info.suhu_ideal }}</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-item-label">Kebutuhan Air</div>
+                            <div class="info-item-nilai">
+                                <span class="badge-air {{ info.kebutuhan_air | lower }}">
+                                    {{ info.kebutuhan_air }}
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Tips Penanaman -->
+                <div class="card-kustom mb-4">
+                    <div class="card-header-kustom">Tips Penanaman</div>
+                    <div class="card-body-kustom">
+                        <ul class="list-tips">
+                            {% for tip in info.tips %}
+                            <li>{{ tip }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Grafik Radar -->
+                {% if grafik_radar %}
+                <div class="kontainer-grafik mb-4">
+                    <div class="grafik-judul">
+                        Profil Lahan vs Rata-rata {{ info.nama_id }}
+                    </div>
+                    <img
+                        src="{{ url_for('static', filename='img/prediction/' + grafik_radar) }}"
+                        alt="Grafik Radar Profil Lahan"
+                        class="grafik-img"
+                    >
+                </div>
+                {% endif %}
+
+                <!-- Tombol Aksi -->
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{{ url_for('form_teknis') }}" class="btn-primer">
+                        Prediksi Lagi
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn-sekunder">
+                        Kembali ke Beranda
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer-kustom">
+    <div class="container">
+        <div class="footer-copyright">
+            Selsa Shafana A. - Praktikum Kecerdasan Buatan
+        </div>
+    </div>
+</footer>
+
+<button id="tombol-scroll-top" title="Kembali ke atas">
+    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z"/>
+    </svg>
+</button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</body>
+</html>

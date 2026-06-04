@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id" data-tema="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mode Petani - Sistem Rekomendasi Tanaman</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div id="overlay-loading" class="overlay-loading">
+    <div style="text-align: center;">
+        <div class="spinner-kustom"></div>
+        <div id="loading-teks" class="loading-teks">Sedang menganalisis kondisi lahan...</div>
+    </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar-kustom">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <a href="{{ url_for('index') }}" class="navbar-brand-teks text-decoration-none">
+                Rekomendasi <span>Tanaman</span>
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                <nav class="d-none d-md-flex align-items-center gap-1">
+                    <a href="{{ url_for('index') }}" class="nav-link">Beranda</a>
+                    <a href="{{ url_for('form_teknis') }}" class="nav-link">Mode Ahli</a>
+                    <a href="{{ url_for('form_petani') }}" class="nav-link active">Mode Petani</a>
+                    <a href="{{ url_for('about') }}" class="nav-link">Tentang</a>
+                </nav>
+                <button id="tombol-tema" class="btn-tema">Gelap</button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- HEADER -->
+<div style="background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border-warna); padding: 1.5rem 0;">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb-kustom breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('index') }}">Beranda</a>
+                </li>
+                <li class="breadcrumb-item active">Mode Petani</li>
+            </ol>
+        </nav>
+        <h1 class="section-judul mt-1">Mode Petani</h1>
+        <p class="section-subjudul mb-0">
+            Jawab pertanyaan berikut sesuai kondisi lahan Anda.
+            Tidak perlu mengetahui nilai teknis seperti N, P, K, atau pH.
+        </p>
+    </div>
+</div>
+
+<main class="py-5">
+    <div class="container">
+
+        {% if error %}
+        <div class="alert-kustom alert-error mb-4">{{ error }}</div>
+        {% endif %}
+
+        <div class="row g-4 justify-content-center">
+            <div class="col-12 col-lg-8">
+
+                <form
+                    id="form-petani"
+                    action="{{ url_for('prediksi_petani') }}"
+                    method="POST"
+                >
+                    {% for p in pertanyaan %}
+                    <div
+                        class="card-kustom mb-4 grup-pertanyaan"
+                        data-id="{{ p.id }}"
+                    >
+                        <div class="card-body-kustom">
+
+                            <!-- Nomor dan teks pertanyaan -->
+                            <div class="d-flex align-items-start mb-3">
+                                <span class="pertanyaan-nomor">
+                                    {{ loop.index }}
+                                </span>
+                                <div class="pertanyaan-judul">
+                                    {{ p.teks }}
+                                </div>
+                            </div>
+
+                            <!-- Pilihan jawaban -->
+                            <div class="pilihan-petani">
+                                {% for pilihan in p.pilihan %}
+                                <label class="pilihan-item">
+                                    <input
+                                        type="radio"
+                                        name="{{ p.id }}"
+                                        value="{{ pilihan.nilai }}"
+                                        {% if loop.first %}checked{% endif %}
+                                    >
+                                    <span class="pilihan-item-teks">
+                                        {{ pilihan.label }}
+                                    </span>
+                                </label>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Tombol Submit -->
+                    <div class="d-flex gap-3 flex-wrap justify-content-center mt-4">
+                        <button type="submit" class="btn-primer btn-lg-kustom">
+                            Dapatkan Rekomendasi Tanaman
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn-sekunder btn-lg-kustom">
+                            Kembali
+                        </a>
+                    </div>
+
+                </form>
+
+            </div>
+
+            <!-- Kolom info singkat -->
+            <div class="col-12 col-lg-4">
+                <div class="card-kustom" style="position: sticky; top: 80px;">
+                    <div class="card-header-kustom">Informasi</div>
+                    <div class="card-body-kustom">
+                        <p style="font-size: 0.875rem; color: var(--teks-sekunder); line-height: 1.7;">
+                            Pertanyaan di sebelah kiri dirancang untuk
+                            menggambarkan kondisi lahan Anda secara sederhana.
+                            Jawaban Anda akan dikonversi secara otomatis
+                            menjadi nilai teknis yang dibutuhkan oleh
+                            model KNN.
+                        </p>
+                        <hr style="border-color: var(--border-warna);">
+                        <div class="info-item">
+                            <div class="info-item-label">Total Pertanyaan</div>
+                            <div class="info-item-nilai">{{ pertanyaan|length }} pertanyaan</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label">Waktu Estimasi</div>
+                            <div class="info-item-nilai">1 - 2 menit</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label">Hasil</div>
+                            <div class="info-item-nilai">
+                                Rekomendasi tanaman beserta
+                                informasi lengkap dan tips penanaman
+                            </div>
+                        </div>
+                        <div class="alert-kustom alert-info mt-3">
+                            Semua pertanyaan harus dijawab
+                            sebelum melanjutkan.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer-kustom">
+    <div class="container">
+        <div class="footer-copyright">
+            Selsa Shafana A. - Praktikum Kecerdasan Buatan 
+        </div>
+    </div>
+</footer>
+
+<button id="tombol-scroll-top" title="Kembali ke atas">
+    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z"/>
+    </svg>
+</button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</body>
+</html>
