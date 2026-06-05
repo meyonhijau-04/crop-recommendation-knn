@@ -147,11 +147,16 @@ def generate_grafik_radar(nilai_dict, label):
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DATASET_PATH = os.path.join(BASE_DIR, 'dataset', 'crop_recommendation.csv')
     
-    df           = pd.read_csv(DATASET_PATH)
+    if os.path.exists(DATASET_PATH):
+        df = pd.read_csv(DATASET_PATH)
+    else:
+        URL_DATASET = "https://raw.githubusercontent.com/meyonhijau-04/crop-recommendation-knn/main/dataset/crop_recommendation.csv"
+        df = pd.read_csv(URL_DATASET)
+
     rata_tanaman = df[df['label'] == label][FITUR_KOLOM].mean()
     df_min       = df[FITUR_KOLOM].min()
     df_max       = df[FITUR_KOLOM].max()
-
+    
     nilai_user_norm = [
         (nilai_dict[f] - df_min[f]) / (df_max[f] - df_min[f])
         for f in FITUR_KOLOM
@@ -572,6 +577,7 @@ def api_prediksi():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
 # ============================================================
 # JALANKAN
 # ============================================================
