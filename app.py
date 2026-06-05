@@ -15,7 +15,6 @@ from flask import (
     Flask,
     render_template,
     request,
-    url_for,
     send_file,
     jsonify
 )
@@ -36,8 +35,23 @@ app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 ALLOWED_EXTENSIONS = {'csv'}
 
 # ============================================================
-# FILTER JINJA — tojson_safe
-# Menghasilkan JSON valid dan aman untuk atribut HTML
+# BUAT SEMUA FOLDER YANG DIBUTUHKAN
+# Diletakkan di sini agar dieksekusi saat startup
+# baik via python app.py maupun via gunicorn (Render/Railway)
+# ============================================================
+
+for folder in [
+    'uploads',
+    'model',
+    os.path.join('static', 'img', 'training'),
+    os.path.join('static', 'img', 'prediction'),
+    os.path.join('static', 'img', 'tanaman'),
+    'dataset',
+]:
+    os.makedirs(folder, exist_ok=True)
+
+# ============================================================
+# FILTER JINJA
 # ============================================================
 
 @app.template_filter('tojson_safe')
@@ -142,14 +156,27 @@ def prediksi_satu(nilai_dict):
             for t in top3
         ],
     }
+
+
 def generate_grafik_radar(nilai_dict, label):
-    rata_tanaman = {
-        'N': 50.0, 'P': 53.0, 'K': 48.0, 
-        'temperature': 25.0, 'humidity': 71.0, 'ph': 6.5, 'rainfall': 103.0
+    # Gunakan nilai min/max hardcoded agar tidak perlu baca CSV
+    # dan tidak bergantung pada filesystem saat deployment
+    df_min = {
+        'N': 0, 'P': 5, 'K': 5,
+        'temperature': 8, 'humidity': 14,
+        'ph': 3.5, 'rainfall': 20
     }
-    
-    df_min = {'N': 0, 'P': 5, 'K': 5, 'temperature': 8, 'humidity': 14, 'ph': 3.5, 'rainfall': 20}
-    df_max = {'N': 140, 'P': 145, 'K': 205, 'temperature': 43, 'humidity': 99, 'ph': 9.9, 'rainfall': 298}
+    df_max = {
+        'N': 140, 'P': 145, 'K': 205,
+        'temperature': 43, 'humidity': 99,
+        'ph': 9.9, 'rainfall': 298
+    }
+    # Rata-rata global dataset sebagai pembanding
+    rata_tanaman = {
+        'N': 50.0, 'P': 53.0, 'K': 48.0,
+        'temperature': 25.0, 'humidity': 71.0,
+        'ph': 6.5, 'rainfall': 103.0
+    }
 
     nilai_user_norm = [
         (nilai_dict[f] - df_min[f]) / (df_max[f] - df_min[f])
@@ -185,19 +212,18 @@ def generate_grafik_radar(nilai_dict, label):
 
     plt.title(
         'Profil Lahan vs Rata-rata ' + get_info_tanaman(label)['nama_id'],
-        size=12,
-        fontweight='bold',
-        pad=20
+        size=12, fontweight='bold', pad=20
     )
     plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1), fontsize=9)
     plt.tight_layout()
 
-    nama_file = 'radar_' + uuid.uuid4().hex[:8] + '.png'
-    plt.savefig(
-        'static/img/prediction/' + nama_file,
-        dpi=150,
-        bbox_inches='tight'
-    )
+    # Pastikan folder ada sebelum simpan
+    folder_prediction = os.path.join('static', 'img', 'prediction')
+    os.makedirs(folder_prediction, exist_ok=True)
+
+    nama_file   = 'radar_' + uuid.uuid4().hex[:8] + '.png'
+    path_simpan = os.path.join(folder_prediction, nama_file)
+    plt.savefig(path_simpan, dpi=150, bbox_inches='tight')
     plt.close()
 
     return nama_file
@@ -215,8 +241,7 @@ def generate_grafik_bulk(hasil_list):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
     fig.suptitle(
         'Distribusi Hasil Prediksi Rekomendasi Tanaman',
-        fontsize=14,
-        fontweight='bold'
+        fontsize=14, fontweight='bold'
     )
 
     ax1.pie(values, labels=labels, autopct='%1.1f%%',
@@ -229,9 +254,7 @@ def generate_grafik_bulk(hasil_list):
         ax2.text(
             bar.get_width() + 0.1,
             bar.get_y() + bar.get_height() / 2,
-            str(val),
-            va='center',
-            fontsize=9
+            str(val), va='center', fontsize=9
         )
     ax2.set_title('Jumlah per Tanaman', fontsize=12, fontweight='bold')
     ax2.set_xlabel('Jumlah Data')
@@ -239,12 +262,13 @@ def generate_grafik_bulk(hasil_list):
 
     plt.tight_layout()
 
-    nama_file = 'bulk_' + uuid.uuid4().hex[:8] + '.png'
-    plt.savefig(
-        'static/img/prediction/' + nama_file,
-        dpi=150,
-        bbox_inches='tight'
-    )
+    # Pastikan folder ada sebelum simpan
+    folder_prediction = os.path.join('static', 'img', 'prediction')
+    os.makedirs(folder_prediction, exist_ok=True)
+
+    nama_file   = 'bulk_' + uuid.uuid4().hex[:8] + '.png'
+    path_simpan = os.path.join(folder_prediction, nama_file)
+    plt.savefig(path_simpan, dpi=150, bbox_inches='tight')
     plt.close()
 
     return nama_file
@@ -256,12 +280,12 @@ def generate_grafik_bulk(hasil_list):
 @app.route('/')
 def index():
     grafik_training = {
-        'confusion_matrix': 'static/img/training/confusion_matrix.png',
-        'elbow_method'    : 'static/img/training/elbow_method.png',
-        'akurasi_per_k'   : 'static/img/training/akurasi_per_k.png',
-        'heatmap_korelasi': 'static/img/training/heatmap_korelasi.png',
-        'distribusi_fitur': 'static/img/training/distribusi_fitur.png',
-        'distribusi_label': 'static/img/training/distribusi_label.png',
+        'confusion_matrix': os.path.join('static', 'img', 'training', 'confusion_matrix.png'),
+        'elbow_method'    : os.path.join('static', 'img', 'training', 'elbow_method.png'),
+        'akurasi_per_k'   : os.path.join('static', 'img', 'training', 'akurasi_per_k.png'),
+        'heatmap_korelasi': os.path.join('static', 'img', 'training', 'heatmap_korelasi.png'),
+        'distribusi_fitur': os.path.join('static', 'img', 'training', 'distribusi_fitur.png'),
+        'distribusi_label': os.path.join('static', 'img', 'training', 'distribusi_label.png'),
     }
 
     grafik_tersedia = {
@@ -377,6 +401,9 @@ def prediksi_bulk():
         if not allowed_file(file.filename):
             raise ValueError('Format file harus CSV.')
 
+        # Pastikan folder uploads ada
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
         filename = secure_filename(uuid.uuid4().hex[:8] + '_' + file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
@@ -431,7 +458,9 @@ def prediksi_bulk():
 
 @app.route('/download-template-csv')
 def download_template_csv():
-    template_path = 'dataset/contoh_input.csv'
+    template_path = os.path.join('dataset', 'contoh_input.csv')
+
+    os.makedirs('dataset', exist_ok=True)
 
     if not os.path.exists(template_path):
         df_template = pd.DataFrame([
@@ -465,8 +494,10 @@ def download_hasil_csv():
             row['Kepercayaan (%)']     = item['kepercayaan']
             rows.append(row)
 
-        df_hasil  = pd.DataFrame(rows)
-        temp_path = 'uploads/hasil_' + uuid.uuid4().hex[:8] + '.csv'
+        df_hasil = pd.DataFrame(rows)
+
+        os.makedirs('uploads', exist_ok=True)
+        temp_path = os.path.join('uploads', 'hasil_' + uuid.uuid4().hex[:8] + '.csv')
         df_hasil.to_csv(temp_path, index=False)
 
         response = send_file(
@@ -500,8 +531,10 @@ def download_hasil_excel():
             row['Kepercayaan (%)']     = item['kepercayaan']
             rows.append(row)
 
-        df_hasil  = pd.DataFrame(rows)
-        temp_path = 'uploads/hasil_' + uuid.uuid4().hex[:8] + '.xlsx'
+        df_hasil = pd.DataFrame(rows)
+
+        os.makedirs('uploads', exist_ok=True)
+        temp_path = os.path.join('uploads', 'hasil_' + uuid.uuid4().hex[:8] + '.xlsx')
 
         with pd.ExcelWriter(temp_path, engine='openpyxl') as writer:
             df_hasil.to_excel(
@@ -571,17 +604,10 @@ def api_prediksi():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
 # ============================================================
 # JALANKAN
 # ============================================================
 
 if __name__ == '__main__':
-    os.makedirs('dataset', exist_ok=True) 
-    
-    os.makedirs('uploads', exist_ok=True)
-    os.makedirs('model', exist_ok=True)
-    os.makedirs('static/img/training', exist_ok=True)
-    os.makedirs('static/img/prediction', exist_ok=True)
-    os.makedirs('static/img/tanaman', exist_ok=True)
     app.run(debug=True, host='0.0.0.0', port=5000)
