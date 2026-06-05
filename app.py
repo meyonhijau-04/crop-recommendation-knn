@@ -142,21 +142,15 @@ def prediksi_satu(nilai_dict):
             for t in top3
         ],
     }
-
 def generate_grafik_radar(nilai_dict, label):
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    DATASET_PATH = os.path.join(BASE_DIR, 'dataset', 'crop_recommendation.csv')
+    rata_tanaman = {
+        'N': 50.0, 'P': 53.0, 'K': 48.0, 
+        'temperature': 25.0, 'humidity': 71.0, 'ph': 6.5, 'rainfall': 103.0
+    }
     
-    if os.path.exists(DATASET_PATH):
-        df = pd.read_csv(DATASET_PATH)
-    else:
-        URL_DATASET = "https://raw.githubusercontent.com/meyonhijau-04/crop-recommendation-knn/main/dataset/crop_recommendation.csv"
-        df = pd.read_csv(URL_DATASET)
+    df_min = {'N': 0, 'P': 5, 'K': 5, 'temperature': 8, 'humidity': 14, 'ph': 3.5, 'rainfall': 20}
+    df_max = {'N': 140, 'P': 145, 'K': 205, 'temperature': 43, 'humidity': 99, 'ph': 9.9, 'rainfall': 298}
 
-    rata_tanaman = df[df['label'] == label][FITUR_KOLOM].mean()
-    df_min       = df[FITUR_KOLOM].min()
-    df_max       = df[FITUR_KOLOM].max()
-    
     nilai_user_norm = [
         (nilai_dict[f] - df_min[f]) / (df_max[f] - df_min[f])
         for f in FITUR_KOLOM
