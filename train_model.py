@@ -1,6 +1,6 @@
 # ============================================================
 # train_model.py
-# Script untuk melatih model KNN dan generate grafik jurnal
+# Script untuk melatih model KNN dan generate grafik 
 # Jalankan: python train_model.py
 # ============================================================
 
@@ -36,7 +36,6 @@ DATASET_PATH = 'dataset/crop_recommendation.csv'
 MODEL_PATH = 'model/knn_model.pkl'
 SCALER_PATH = 'model/scaler.pkl'
 
-# Path untuk menyimpan grafik jurnal
 GRAFIK_PATH = 'static/img/training/'
 
 # Pastikan folder tersedia, jika belum ada maka dibuat otomatis
@@ -185,13 +184,12 @@ joblib.dump(knn, MODEL_PATH)
 print(f"    Model disimpan ke {MODEL_PATH}")
 
 # ============================================================
-# STEP 8 — GENERATE GRAFIK UNTUK JURNAL
+# STEP 8 — GENERATE GRAFIK U
 # Semua grafik disimpan ke static/img/training/
-# Resolusi tinggi (300 DPI) agar layak untuk jurnal/laporan
 # ============================================================
 
 print()
-print("[8] Generate grafik untuk jurnal & laporan...")
+print("[8] Generate grafik...")
 
 # Warna palette konsisten untuk semua grafik
 WARNA_UTAMA = '#2E86AB'
