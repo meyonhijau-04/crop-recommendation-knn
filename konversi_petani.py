@@ -5,6 +5,13 @@
 # ph, rainfall yang akan dimasukkan ke model KNN
 # ============================================================
 
+import os
+import pandas as pd
+
+# TAMBAHKAN TRIK JALUR ABSOLUT INI DI SINI
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATASET_PATH = os.path.join(BASE_DIR, 'dataset', 'crop_recommendation.csv')
+
 # ============================================================
 # LOGIKA KONVERSI
 # Setiap jawaban petani dipetakan ke rentang nilai numerik
