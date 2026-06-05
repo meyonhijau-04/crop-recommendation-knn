@@ -143,9 +143,11 @@ def prediksi_satu(nilai_dict):
         ],
     }
 
-
 def generate_grafik_radar(nilai_dict, label):
-    df           = pd.read_csv('dataset/crop_recommendation.csv')
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATASET_PATH = os.path.join(BASE_DIR, 'dataset', 'crop_recommendation.csv')
+    
+    df           = pd.read_csv(DATASET_PATH)
     rata_tanaman = df[df['label'] == label][FITUR_KOLOM].mean()
     df_min       = df[FITUR_KOLOM].min()
     df_max       = df[FITUR_KOLOM].max()
