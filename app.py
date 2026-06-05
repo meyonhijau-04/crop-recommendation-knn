@@ -572,12 +572,13 @@ def api_prediksi():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 # ============================================================
 # JALANKAN
 # ============================================================
 
 if __name__ == '__main__':
+    os.makedirs('dataset', exist_ok=True) 
+    
     os.makedirs('uploads', exist_ok=True)
     os.makedirs('model', exist_ok=True)
     os.makedirs('static/img/training', exist_ok=True)
